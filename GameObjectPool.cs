@@ -4,6 +4,22 @@ using UnityEngine;
 namespace Unitilities
 {
 
+    [System.Serializable]
+    public class NamedPool
+    {
+        public string name;
+        public GameObjectPool pool;
+        public NamedPool(string name, GameObjectPool pool)
+        {
+            this.name = name;
+            this.pool = pool;
+        }
+        public static implicit operator GameObjectPool(NamedPool namedPool)
+        {
+            return namedPool.pool;
+        }
+    }
+
     /// <summary>
     /// 针对GameObject的对象池
     /// </summary>
