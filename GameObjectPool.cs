@@ -145,6 +145,7 @@ namespace Unitilities
             }
             activeObjects.Remove(toPush);
             inactiveObjects.Add(toPush);
+            toPush.transform.SetParent(transform);
             toPush.SetActive(false);
             return true;
         }
