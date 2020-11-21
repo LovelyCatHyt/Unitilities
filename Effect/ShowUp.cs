@@ -10,13 +10,16 @@ namespace Unitilities.Effect
     {
         [SerializeField] private Transform target;
         private event Action finish;
-        float usedTime;
+        /// <summary>
+        /// 实现动画的协程实例, 保证同一时间只有一个
+        /// </summary>
         private IEnumerator runningLoop;
         public float effectTime = 0.5f;
         public Vector3 targetScale = Vector3.one;
 
         private IEnumerator Loop()
         {
+            float usedTime;
             for(usedTime = 0f; usedTime < effectTime; usedTime += Time.deltaTime)
             {
                 target.localScale = Vector3.Lerp(Vector3.zero, targetScale,
@@ -29,14 +32,15 @@ namespace Unitilities.Effect
         [ContextMenu("Play")]
         public void Play()
         {
+            if (runningLoop != null) StopCoroutine(runningLoop);
             StartCoroutine(runningLoop = Loop());
         }
 
         [ContextMenu("Stop")]
         public void Stop()
         {
-            StopCoroutine(runningLoop);
-            target.localScale = targetScale;
+            if (runningLoop != null) StopCoroutine(runningLoop);
+            runningLoop = null;
             OnFinish();
         }
 
