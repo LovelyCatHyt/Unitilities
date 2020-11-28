@@ -8,7 +8,7 @@ namespace Unitilities.Effect
 
     public class ShowUp : MonoBehaviour, IEffect
     {
-        [SerializeField] private Transform target;
+        [SerializeField] private Transform target = default;
         private event Action finish;
         /// <summary>
         /// 实现动画的协程实例, 保证同一时间只有一个
