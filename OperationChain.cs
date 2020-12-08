@@ -31,6 +31,22 @@ namespace Unitilities
         {
             get => operations[operationPointer];
         }
+        /// <summary>
+        /// 当前位置, -1表示未执行任何操作
+        /// </summary>
+        public int CurrentPos => operationPointer;
+        /// <summary>
+        /// 已储存的操作数量
+        /// </summary>
+        public int StoredOperCount => operations.Count;
+        /// <summary>
+        /// 在起始位置
+        /// </summary>
+        public bool IsBegin => operationPointer == -1;
+        /// <summary>
+        /// 在结束位置
+        /// </summary>
+        public bool IsEnd => operationPointer + 1 == operations.Count;
 
         public void AddAndExcuteOperation(IRecovableOperation operation, bool merge = true)
         {
