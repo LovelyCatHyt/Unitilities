@@ -22,15 +22,34 @@ namespace Unitilities
     /// </summary>
     public class OperationChain
     {
-        private List<IRecovableOperation> operations = new List<IRecovableOperation>();
+        private List<IRecovableOperation> operations;
         /// <summary>
         /// 指向当前最新[执行过的]操作
         /// </summary>
-        private int operationPointer = -1;
+        private int operationPointer;
         private IRecovableOperation CurrentOper
         {
             get => operations[operationPointer];
         }
+        /// <summary>
+        /// 创建空的操作链
+        /// </summary>
+        public OperationChain()
+        {
+            operations = new List<IRecovableOperation>();
+            operationPointer = -1;
+        }
+        /// <summary>
+        /// 使用外部构建的操作列表来构建一个操作链
+        /// </summary>
+        /// <param name="operations">操作列表</param>
+        /// <param name="pos">初始操作位置</param>
+        public OperationChain(List<IRecovableOperation> operations, int pos = -1)
+        {
+            this.operations = operations;
+            this.operationPointer = pos;
+        }
+        
         /// <summary>
         /// 当前位置, -1表示未执行任何操作
         /// </summary>
