@@ -44,14 +44,14 @@ namespace Unitilities.Camera
         /// 相机范围
         /// </summary>
         public Bounds2D cameraBounds;
-        
+
         private UnityEngine.Camera _camera;
 
         private Vector2 cameraSize
         {
             get
             {
-                var h = _camera.orthographicSize;
+                var h = 2 * _camera.orthographicSize;
                 return new Vector2(_camera.aspect * h, h);
             }
         }
@@ -75,7 +75,7 @@ namespace Unitilities.Camera
 
         private void Update()
         {
-            
+
             // 用这个公式可以实现在不同的帧率下有相同的摄像机速度, 且速度可控
             var t = Mathf.Exp(-approachRate * Time.deltaTime);
             transform.SetPosition2D(Vector2.Lerp(GetTrackCenter(), transform.Position2D(), t));
@@ -84,7 +84,7 @@ namespace Unitilities.Camera
         /// <summary>
         /// 初始化到中心位置
         /// </summary>
-        public void Init() => transform.SetPosition2D(GetTrackCenterUnClamp());
+        public void Init() => transform.SetPosition2D(GetTrackCenter());
 
         /// <summary>
         /// 获取跟踪目标的加权中心, 无限制
