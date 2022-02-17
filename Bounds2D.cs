@@ -86,14 +86,16 @@ namespace Unitilities
         /// 扩大范围, 使得该范围包围指定点
         /// </summary>
         /// <param name="point"></param>
-        public void Encapsulate(Vector2 point)
+        public Bounds2D Encapsulate(Vector2 point)
         {
             var min_x = Mathf.Min(Min.x, point.x);
             var min_y = Mathf.Min(Min.y, point.y);
             var max_x = Mathf.Max(Max.x, point.x);
             var max_y = Mathf.Max(Max.y, point.y);
-            Min = new Vector2(min_x, min_y);
-            Max = new Vector2(max_x, max_y);
+            var b = new Bounds2D();
+            b.Min = new Vector2(min_x, min_y);
+            b.Max = new Vector2(max_x, max_y);
+            return b;
         }
 
         /// <summary>
