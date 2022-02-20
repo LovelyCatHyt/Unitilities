@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Unitilities
 {
@@ -28,7 +30,7 @@ namespace Unitilities
         /// <summary>
         /// 命名模式
         /// </summary>
-        public enum InstanciateNameMode
+        public enum ObjectNamingMode
         {
             /// <summary>
             /// 啥都不干,实例化结果是咋样就咋样
@@ -43,15 +45,28 @@ namespace Unitilities
             /// </summary>
             Index
         }
+
+        public enum PrefabSelectMode
+        {
+            /// <summary>
+            /// 从0开始循环选取
+            /// </summary>
+            Loop,
+            /// <summary>
+            /// 随机选取
+            /// </summary>
+            Random
+        }
         /// <summary>
         /// 允许扩充对象池
         /// </summary>
         public bool canExtend = false;
-        public InstanciateNameMode mode = InstanciateNameMode.Index;
+        public ObjectNamingMode instanciateMode = ObjectNamingMode.Index;
+        public PrefabSelectMode prefabSelectMode = PrefabSelectMode.Loop;
         /// <summary>
         /// 预制体
         /// </summary>
-        public GameObject prefab;
+        public GameObject[] prefabs;
         /// <summary>
         /// 不活跃的GameObject列表
         /// </summary>
@@ -70,27 +85,30 @@ namespace Unitilities
         /// </summary>
         public int initObject = 10;
 
+        private int _currentPrefabIndex;
+
         /// <summary>
         /// 在对象池中创建新的GameObject
         /// </summary>
         private void CreateNew()
         {
-            GameObject temp = Instantiate(prefab) as GameObject;
-            //禁用并添加到子transform
+            var prefab = SelectPrefab();// TODO;
+            // 创建并设置 Transform
+            GameObject temp = Instantiate(prefab, transform, false);
+            // 禁用
             temp.SetActive(false);
-            temp.transform.SetParent(transform, false);
             inactiveObjects.Add(temp);
             poolCapacity++;
-            //重命名
-            switch(mode)
+            // 重命名
+            switch(instanciateMode)
             {
-                case InstanciateNameMode.Raw:
-                    //Nothing
+                case ObjectNamingMode.Raw:
+                    // Nothing
                     break;
-                case InstanciateNameMode.Origin:
+                case ObjectNamingMode.Origin:
                     temp.name = prefab.name;
                     break;
-                case InstanciateNameMode.Index:
+                case ObjectNamingMode.Index:
                     temp.name = prefab.name + "(" + (poolCapacity - 1).ToString() + ")";
                     break;
             }
@@ -157,6 +175,24 @@ namespace Unitilities
         {
             List<GameObject> tempList = new List<GameObject>(activeObjects);
             tempList.ForEach(obj => Push(obj));
+        }
+
+        private GameObject SelectPrefab()
+        {
+            switch (prefabSelectMode)
+            {
+                case PrefabSelectMode.Loop:
+                    _currentPrefabIndex++;
+                    _currentPrefabIndex %= prefabs.Length;
+                    break;
+                case PrefabSelectMode.Random:
+                    _currentPrefabIndex = Random.Range(0, prefabs.Length);
+                    break;
+                default:
+                    _currentPrefabIndex = 0;
+                    break;
+            }
+            return prefabs[_currentPrefabIndex];
         }
     }
 }
