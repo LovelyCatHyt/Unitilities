@@ -13,7 +13,7 @@ namespace Unitilities.Test
         [Test]
         public void Test_Init()
         {
-            // ĞÂ½¨Ò»¸öÖĞĞÄÔÚÔ­µã, °ë³¤¿í¾ùÎª1µÄ¾ØĞÎ·¶Î§
+            // æ–°å»ºä¸€ä¸ªä¸­å¿ƒåœ¨åŸç‚¹, åŠé•¿å®½å‡ä¸º1çš„çŸ©å½¢èŒƒå›´
             var b = new Bounds2D(Vector2.zero, 2 * Vector2.one);
             Assert.AreEqual(Vector2.one * 2, b.Size);
             Assert.AreEqual(Vector2.one, b.Extents);
@@ -32,6 +32,7 @@ namespace Unitilities.Test
         [Test]
         public void Test_Contains()
         {
+            // åŒ…å«çš„
             Assert.True(one.Contains(Vector2.zero));
             Assert.True(one.Contains(Vector2.one));
             bool temp = true;
@@ -40,6 +41,19 @@ namespace Unitilities.Test
                 temp &= one.Contains(new Vector2(Random.value, Random.value));
             }
             Assert.True(temp);
+            // ä¸åŒ…å«çš„
+            Assert.True(!one.Contains(new Vector2(1.01f, 1.01f)));
+            Assert.True(!one.Contains(new Vector2(-1.01f, -1.01f)));
+        }
+
+        [Test]
+        public void Test_Equals()
+        {
+            var anotherOne = new Bounds2D(Vector2.zero, 2 * Vector2.one);
+            var two = new Bounds2D(Vector2.zero, 4 * Vector2.one);
+            Assert.True(anotherOne == one);
+            Assert.True(anotherOne.Equals(one));
+            Assert.True(anotherOne != two);
         }
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

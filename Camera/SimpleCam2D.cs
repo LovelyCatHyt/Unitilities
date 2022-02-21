@@ -6,42 +6,42 @@ using UnityEngine;
 namespace Unitilities.Camera
 {
     /// <summary>
-    /// ¼òµ¥µÄ 2D ÉãÏñ»ú, ¿ÉÒÔ¸ú×Ù¶à¸öÄ¿±ê, ÏŞÖÆÔË¶¯ÔÚ¾ØĞÎ·¶Î§ÄÚ.
-    /// <para>±ØĞëÊÇÃæÏòzÖá¸ºÏòµÄÕı½»ÊÓ½ÇÉãÏñ»ú, ÆäËüÇé¿öµÄĞĞÎª¿ÉÄÜ²»·ûºÏÔ¤ÆÚ</para>
+    /// ç®€å•çš„ 2D æ‘„åƒæœº, å¯ä»¥è·Ÿè¸ªå¤šä¸ªç›®æ ‡, é™åˆ¶è¿åŠ¨åœ¨çŸ©å½¢èŒƒå›´å†….
+    /// <para>å¿…é¡»æ˜¯é¢å‘zè½´è´Ÿå‘çš„æ­£äº¤è§†è§’æ‘„åƒæœº, å…¶å®ƒæƒ…å†µçš„è¡Œä¸ºå¯èƒ½ä¸ç¬¦åˆé¢„æœŸ</para>
     /// </summary>
     public class SimpleCam2D : MonoBehaviour
     {
         /// <summary>
-        /// ±»¸úËæµÄÄ¿±ê¼°Ïà¹Ø²ÎÊı
+        /// è¢«è·Ÿéšçš„ç›®æ ‡åŠç›¸å…³å‚æ•°
         /// </summary>
         [Serializable]
         public struct CamFollowed
         {
             /// <summary>
-            /// ¸ú×ÙÄ¿±ê
+            /// è·Ÿè¸ªç›®æ ‡
             /// </summary>
             public Transform transform;
             /// <summary>
-            /// Æ«ÒÆÁ¿
+            /// åç§»é‡
             /// </summary>
             public Vector3 offset;
             /// <summary>
-            /// ¸ú×Ù¶ÔÏóµÄÈ¨ÖØ
+            /// è·Ÿè¸ªå¯¹è±¡çš„æƒé‡
             /// </summary>
             [Min(0)] public float weight;
         }
 
         public List<CamFollowed> targets = new List<CamFollowed>();
         /// <summary>
-        /// Êó±êµÄÈ¨ÖØ
+        /// é¼ æ ‡çš„æƒé‡
         /// </summary>
         [Min(0)] public float mouseWeight;
         /// <summary>
-        /// ½Ó½üËÙÂÊ
+        /// æ¥è¿‘é€Ÿç‡
         /// </summary>
         [Min(0)] public float approachRate;
         /// <summary>
-        /// Ïà»ú·¶Î§
+        /// ç›¸æœºèŒƒå›´
         /// </summary>
         public Bounds2D cameraBounds;
 
@@ -56,9 +56,23 @@ namespace Unitilities.Camera
             }
         }
 
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            var lB = new Vector3(cameraBounds.Min.x, cameraBounds.Min.y, 0);
+            var rB = new Vector3(cameraBounds.Max.x, cameraBounds.Min.y, 0);
+            var rT = new Vector3(cameraBounds.Max.x, cameraBounds.Max.y, 0);
+            var lT = new Vector3(cameraBounds.Min.x, cameraBounds.Max.y, 0);
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(lB, rB);
+            Gizmos.DrawLine(rB, rT);
+            Gizmos.DrawLine(rT, lT);
+            Gizmos.DrawLine(lT, lB);
+        }
+#endif
         private void Awake()
         {
-            // ÓÅÏÈÕÒ±¾ÎïÌåµÄ, ·ñÔòÕÒ×ÓÎïÌå, ×îºóÕÒ Camera.main
+            // ä¼˜å…ˆæ‰¾æœ¬ç‰©ä½“çš„, å¦åˆ™æ‰¾å­ç‰©ä½“, æœ€åæ‰¾ Camera.main
             _camera = GetComponent<UnityEngine.Camera>();
             if (!_camera)
             {
@@ -76,18 +90,18 @@ namespace Unitilities.Camera
         private void Update()
         {
 
-            // ÓÃÕâ¸ö¹«Ê½¿ÉÒÔÊµÏÖÔÚ²»Í¬µÄÖ¡ÂÊÏÂÓĞÏàÍ¬µÄÉãÏñ»úËÙ¶È, ÇÒËÙ¶È¿É¿Ø
+            // ç”¨è¿™ä¸ªå…¬å¼å¯ä»¥å®ç°åœ¨ä¸åŒçš„å¸§ç‡ä¸‹æœ‰ç›¸åŒçš„æ‘„åƒæœºé€Ÿåº¦, ä¸”é€Ÿåº¦å¯æ§
             var t = Mathf.Exp(-approachRate * Time.deltaTime);
             transform.SetPosition2D(Vector2.Lerp(GetTrackCenter(), transform.Position2D(), t));
         }
 
         /// <summary>
-        /// ³õÊ¼»¯µ½ÖĞĞÄÎ»ÖÃ
+        /// åˆå§‹åŒ–åˆ°ä¸­å¿ƒä½ç½®
         /// </summary>
         public void Init() => transform.SetPosition2D(GetTrackCenter());
 
         /// <summary>
-        /// »ñÈ¡¸ú×ÙÄ¿±êµÄ¼ÓÈ¨ÖĞĞÄ, ÎŞÏŞÖÆ
+        /// è·å–è·Ÿè¸ªç›®æ ‡çš„åŠ æƒä¸­å¿ƒ, æ— é™åˆ¶
         /// </summary>
         /// <returns></returns>
         private Vector2 GetTrackCenterUnClamp()
@@ -97,17 +111,17 @@ namespace Unitilities.Camera
         }
 
         /// <summary>
-        /// »ñÈ¡¸ú×ÙÄ¿±êµÄ¼ÓÈ¨ÖĞĞÄ, ÏŞÖÆµ½ <see cref="cameraBounds"></see> µÄ·¶Î§ÄÚ
+        /// è·å–è·Ÿè¸ªç›®æ ‡çš„åŠ æƒä¸­å¿ƒ, é™åˆ¶åˆ° <see cref="cameraBounds"></see> çš„èŒƒå›´å†…
         /// </summary>
         /// <returns></returns>
         private Vector2 GetTrackCenter()
         {
-            // ¼õÈ¥ÉãÏñ»úµÄ·¶Î§, ÕâÑùÎŞÂÛÉãÏñ»úÊ²Ã´³ß´ç, ¶¼Ö»»áÔÚ¸Ã·¶Î§ÄÚÅÄÉã
+            // å‡å»æ‘„åƒæœºçš„èŒƒå›´, è¿™æ ·æ— è®ºæ‘„åƒæœºä»€ä¹ˆå°ºå¯¸, éƒ½åªä¼šåœ¨è¯¥èŒƒå›´å†…æ‹æ‘„
             return cameraBounds.Shrink(GetCameraBounds().Extents).Clamp(GetTrackCenterUnClamp());
         }
 
         /// <summary>
-        /// ¼ì²é²¢¹æ·¶»¯È¨ÖØ, Ê¹ÆäºÍÎª1.
+        /// æ£€æŸ¥å¹¶è§„èŒƒåŒ–æƒé‡, ä½¿å…¶å’Œä¸º1.
         /// </summary>
         private void NormalizeWeights()
         {
@@ -127,7 +141,7 @@ namespace Unitilities.Camera
         }
 
         /// <summary>
-        /// »ñÈ¡ÉãÏñ»ú·¶Î§
+        /// è·å–æ‘„åƒæœºèŒƒå›´
         /// </summary>
         /// <returns></returns>
         private Bounds2D GetCameraBounds() => new Bounds2D(transform.Position2D(), cameraSize);

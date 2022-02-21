@@ -1,18 +1,16 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Unitilities
 {
     /// <summary>
-    /// 2D µÄÆ½ĞĞÓÚ×ø±êÖáµÄ°üÎ§ºĞ
+    /// 2D çš„å¹³è¡Œäºåæ ‡è½´çš„åŒ…å›´ç›’
     /// </summary>
     [Serializable]
     public struct Bounds2D
     {
         /// <summary>
-        /// ÖĞĞÄ
+        /// ä¸­å¿ƒ
         /// </summary>
         public Vector2 Center
         {
@@ -20,7 +18,7 @@ namespace Unitilities
             set => _center = value;
         }
         /// <summary>
-        /// °ë³¤¿í
+        /// åŠé•¿å®½
         /// </summary>
         public Vector2 Extents
         {
@@ -28,7 +26,7 @@ namespace Unitilities
             set => _extents = new Vector2(Mathf.Abs(value.x), Mathf.Abs(value.y));
         }
         /// <summary>
-        /// ×ø±ê×îĞ¡µã
+        /// åæ ‡æœ€å°ç‚¹
         /// </summary>
         public Vector2 Min
         {
@@ -40,7 +38,7 @@ namespace Unitilities
             }
         }
         /// <summary>
-        /// ×ø±ê×î´óµã
+        /// åæ ‡æœ€å¤§ç‚¹
         /// </summary>
         public Vector2 Max
         {
@@ -52,7 +50,7 @@ namespace Unitilities
             }
         }
         /// <summary>
-        /// ´óĞ¡
+        /// å¤§å°
         /// </summary>
         public Vector2 Size
         {
@@ -69,8 +67,31 @@ namespace Unitilities
             _extents = size * .5f;
         }
 
+        public bool Equals(Bounds2D other)
+        {
+            return _center.Equals(other._center) && _extents.Equals(other._extents);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (_center.GetHashCode() * 397) ^ _extents.GetHashCode();
+            }
+        }
+
+        public static bool operator ==(Bounds2D a, Bounds2D b)
+        {
+            return a._center == b._center && a._extents == b._extents;
+        }
+
+        public static bool operator !=(Bounds2D a, Bounds2D b)
+        {
+            return a._center != b._center || a._extents != b._extents;
+        }
+
         /// <summary>
-        /// µãÊÇ·ñÔÚ·¶Î§ÄÚ, °üÀ¨±ß½ç
+        /// ç‚¹æ˜¯å¦åœ¨èŒƒå›´å†…, åŒ…æ‹¬è¾¹ç•Œ
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
@@ -83,7 +104,7 @@ namespace Unitilities
         }
 
         /// <summary>
-        /// À©´ó·¶Î§, Ê¹µÃ¸Ã·¶Î§°üÎ§Ö¸¶¨µã
+        /// æ‰©å¤§èŒƒå›´, ä½¿å¾—è¯¥èŒƒå›´åŒ…å›´æŒ‡å®šç‚¹
         /// </summary>
         /// <param name="point"></param>
         public Bounds2D Encapsulate(Vector2 point)
@@ -99,7 +120,7 @@ namespace Unitilities
         }
 
         /// <summary>
-        /// ½«µã×ø±êÏŞÖÆµ½·¶Î§ÄÚ
+        /// å°†ç‚¹åæ ‡é™åˆ¶åˆ°èŒƒå›´å†…
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
@@ -113,7 +134,7 @@ namespace Unitilities
         }
 
         /// <summary>
-        /// ÑØÖĞĞÄËõĞ¡ amount ´óĞ¡µÄ³ß´ç. ÈÎÒâ·½ÏòÉÏµÄ³ß´ç×îĞ¡Îª0.
+        /// æ²¿ä¸­å¿ƒç¼©å° amount å¤§å°çš„å°ºå¯¸. ä»»æ„æ–¹å‘ä¸Šçš„å°ºå¯¸æœ€å°ä¸º0.
         /// </summary>
         /// <param name="amount"></param>
         public Bounds2D Shrink(Vector2 amount)
@@ -121,6 +142,11 @@ namespace Unitilities
             var temp = this;
             temp.Extents -= amount;
             return temp;
+        }
+
+        public static implicit operator Bounds2D(BoundsInt bInt)
+        {
+            return new Bounds2D(bInt.center, (Vector3)bInt.size);
         }
 
         public static implicit operator Bounds(Bounds2D b2d)
