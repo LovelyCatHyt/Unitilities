@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace Unitilities
 {
 
-    [System.Serializable]
+    [Serializable]
     public class NamedPool
     {
         public string name;
@@ -68,17 +69,17 @@ namespace Unitilities
         /// </summary>
         public GameObject[] prefabs;
         /// <summary>
-        /// 不活跃的GameObject列表
+        /// 不活跃的GameObject列表的列表
         /// </summary>
-        public List<GameObject> inactiveObjects = new List<GameObject>();
+        public List<List<GameObject>> inactiveObjects = new List<List<GameObject>>();
         /// <summary>
-        /// 活跃的GameObject列表
+        /// 活跃的GameObject集合的列表
         /// </summary>
-        public List<GameObject> activeObjects = new List<GameObject>();
+        public List<HashSet<GameObject>> activeObjects = new List<HashSet<GameObject>>();
         ///<summary>
         /// 对象池当前容量
         /// </summary>
-        public int poolCapacity { get; private set; } = 0;
+        public List<int> poolCapacities = new List<int>();
 
         /// <summary>
         /// 对象池初始数量
@@ -90,17 +91,17 @@ namespace Unitilities
         /// <summary>
         /// 在对象池中创建新的GameObject
         /// </summary>
-        private void CreateNew()
+        private void CreateNew(int prefabIndex)
         {
-            var prefab = SelectPrefab();// TODO;
+            var prefab = prefabs[prefabIndex];
             // 创建并设置 Transform
             GameObject temp = Instantiate(prefab, transform, false);
             // 禁用
             temp.SetActive(false);
-            inactiveObjects.Add(temp);
-            poolCapacity++;
+            inactiveObjects[prefabIndex].Add(temp);
+            poolCapacities[prefabIndex]++;
             // 重命名
-            switch(instanciateMode)
+            switch (instanciateMode)
             {
                 case ObjectNamingMode.Raw:
                     // Nothing
@@ -109,32 +110,54 @@ namespace Unitilities
                     temp.name = prefab.name;
                     break;
                 case ObjectNamingMode.Index:
-                    temp.name = prefab.name + "(" + (poolCapacity - 1).ToString() + ")";
+                    temp.name = $"{prefab.name} ({poolCapacities[prefabIndex] - 1})";
                     break;
             }
         }
 
         public void Awake()
         {
-            //创建对象池
-            for(int i = 0; i < initObject; i++)
+            // 按照不同的 prefab 创建对象池
+            for (int index = 0; index < prefabs.Length; index++)
             {
-                CreateNew();
+                // 新建相应的结构
+                inactiveObjects.Add(new List<GameObject>());
+                activeObjects.Add(new HashSet<GameObject>());
+                poolCapacities.Add(0);
+                for (int i = 0; i < initObject; i++)
+                {
+                    CreateNew(index);
+                }
             }
         }
 
         /// <summary>
-        /// 尝试取出一个GameObject,对象池用尽则返回false
+        /// 尝试取出一个 GameObject, 对象池用尽则返回 false
+        /// <para>根据 <see cref="prefabSelectMode"/> 决定选择的 prefab 实例</para>
         /// </summary>
         /// <param name="output"></param>
+        /// <param name="parent">需要挂载的父物体</param>
         /// <returns></returns>
-        public bool Pop(out GameObject output)
+        public bool Pop(out GameObject output, Transform parent = null)
         {
-            if(inactiveObjects.Count == 0)
+            return Pop(SelectPrefab(), out output, parent);
+        }
+
+        /// <summary>
+        /// 尝试取出一个 GameObject, 对象池用尽则返回 false
+        /// <para>传入一个具体的索引, 限定需要的 prefab 实例</para>
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="output"></param>
+        /// <param name="parent">需要挂载的父物体</param>
+        /// <returns></returns>
+        public bool Pop(int index, out GameObject output, Transform parent = null)
+        {
+            if (inactiveObjects[index].Count == 0)
             {
-                if(canExtend)
+                if (canExtend)
                 {
-                    CreateNew();
+                    CreateNew(index);
                 }
                 else
                 {
@@ -143,10 +166,11 @@ namespace Unitilities
                     return false;
                 }
             }
-            output = inactiveObjects[inactiveObjects.Count - 1];
-            inactiveObjects.RemoveAt(inactiveObjects.Count - 1);
-            activeObjects.Add(output);
+            output = inactiveObjects[index][inactiveObjects[index].Count - 1];
+            inactiveObjects[index].RemoveAt(inactiveObjects[index].Count - 1);
+            activeObjects[index].Add(output);
             output.SetActive(true);
+            output.transform.parent = parent ? parent : transform;
             return true;
         }
 
@@ -157,12 +181,10 @@ namespace Unitilities
         /// <returns></returns>
         public bool Push(GameObject toPush)
         {
-            if(!activeObjects.Contains(toPush))
-            {
-                return false;
-            }
-            activeObjects.Remove(toPush);
-            inactiveObjects.Add(toPush);
+            var index = activeObjects.FindIndex(set => set.Contains(toPush));
+            if (index == -1) return false;
+            activeObjects[index].Remove(toPush);
+            inactiveObjects[index].Add(toPush);
             toPush.transform.SetParent(transform);
             toPush.SetActive(false);
             return true;
@@ -173,15 +195,24 @@ namespace Unitilities
         /// </summary>
         public void PushAll()
         {
-            List<GameObject> tempList = new List<GameObject>(activeObjects);
-            tempList.ForEach(obj => Push(obj));
+            foreach (var set in activeObjects)
+            {
+                // ToList是为了复制一个列表, 防止在循环中修改集合元素导致的未定义行为
+                set.ToList().ForEach(go => Push(go));
+            }
         }
 
-        private GameObject SelectPrefab()
+        /// <summary>
+        /// 选择一个 prefab, 返回索引
+        /// </summary>
+        /// <returns></returns>
+        private int SelectPrefab()
         {
+            var temp = _currentPrefabIndex;
             switch (prefabSelectMode)
             {
                 case PrefabSelectMode.Loop:
+
                     _currentPrefabIndex++;
                     _currentPrefabIndex %= prefabs.Length;
                     break;
@@ -192,7 +223,8 @@ namespace Unitilities
                     _currentPrefabIndex = 0;
                     break;
             }
-            return prefabs[_currentPrefabIndex];
+            Debug.Log($"{{prefab index: {temp}->{_currentPrefabIndex}");
+            return _currentPrefabIndex;
         }
     }
 }
