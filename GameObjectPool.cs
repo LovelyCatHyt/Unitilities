@@ -223,7 +223,7 @@ namespace Unitilities
                     _currentPrefabIndex = 0;
                     break;
             }
-            Debug.Log($"{{prefab index: {temp}->{_currentPrefabIndex}");
+            // Debug.Log($"{{prefab index: {temp}->{_currentPrefabIndex}");
             return _currentPrefabIndex;
         }
     }
