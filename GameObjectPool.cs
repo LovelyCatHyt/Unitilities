@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using Random = UnityEngine.Random;
 
 namespace Unitilities
@@ -80,6 +81,15 @@ namespace Unitilities
         /// 对象池当前容量
         /// </summary>
         public List<int> poolCapacities = new List<int>();
+        public UnityEvent<GameObject> onPrefabInstantiate;
+        /// <summary>
+        /// 提取物体事件
+        /// </summary>
+        public UnityEvent<GameObject> onPop;
+        /// <summary>
+        /// 放入物品事件
+        /// </summary>
+        public UnityEvent<GameObject> onPush;
 
         /// <summary>
         /// 对象池初始数量
@@ -113,6 +123,8 @@ namespace Unitilities
                     temp.name = $"{prefab.name} ({poolCapacities[prefabIndex] - 1})";
                     break;
             }
+            Debug.Assert(onPrefabInstantiate != null, $"onPrefabInstantiate is null in GOPool of {name}!");
+            onPrefabInstantiate?.Invoke(temp);
         }
 
         public void Awake()
@@ -171,6 +183,7 @@ namespace Unitilities
             activeObjects[index].Add(output);
             output.SetActive(true);
             output.transform.parent = parent ? parent : transform;
+            onPop?.Invoke(output);
             return true;
         }
 
@@ -187,6 +200,7 @@ namespace Unitilities
             inactiveObjects[index].Add(toPush);
             toPush.transform.SetParent(transform);
             toPush.SetActive(false);
+            onPush?.Invoke(toPush);
             return true;
         }
 
