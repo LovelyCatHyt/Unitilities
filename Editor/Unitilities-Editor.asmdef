@@ -1,0 +1,18 @@
+{
+    "name": "Unitilities-Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:2621de402f952b6409cde2a23d3a0aa1"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
