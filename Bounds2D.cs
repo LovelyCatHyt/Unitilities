@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+
 namespace Unitilities
 {
     /// <summary>
@@ -70,6 +71,12 @@ namespace Unitilities
         public bool Equals(Bounds2D other)
         {
             return _center.Equals(other._center) && _extents.Equals(other._extents);
+        }
+
+        public override bool Equals(object other)
+        {
+            var b = (Bounds2D) other;
+            return _center.Equals(b._center) && _extents.Equals(b._extents);
         }
 
         public override int GetHashCode()
