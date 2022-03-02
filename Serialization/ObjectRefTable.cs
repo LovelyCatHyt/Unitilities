@@ -15,13 +15,13 @@ namespace Unitilities.Serialization
     [CreateAssetMenu(fileName = "New Object Reference Table", menuName = "Unitilities/Object reference table")]
     public class ObjectRefTable : ScriptableObject
     {
-
         [SerializeField] private List<Object> refList = new List<Object>();
         /// <summary>
         /// 预处理后的内部的引用列表, 保证有且仅有一个 null 作为首元素
         /// </summary>
         private List<Object> _refList;
         private List<string> _keys;
+        private List<Object> _objs;
         private Dictionary<string, Object> _objectLut;
         private Dictionary<string, int> _idLut;
         private bool _dirty = true;
@@ -46,6 +46,8 @@ namespace Unitilities.Serialization
             {
                 _idLut[_refList[i].name] = i;
             }
+
+            _objs = _keys.ConvertAll(k => _objectLut[k]);
             _dirty = false;
         }
 
@@ -94,7 +96,7 @@ namespace Unitilities.Serialization
         {
             if (index < 0) return null;
             if (index >= _keys.Count) return null;
-            return this[_keys[index]];
+            return _objs[index];
         }
     }
 
