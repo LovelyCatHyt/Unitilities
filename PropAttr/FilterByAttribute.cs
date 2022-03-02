@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace Util.PropAttr
+namespace Unitilities.PropAttr
 {
     /// <summary>
     /// 按指定的字段或属性的值来确定是否显示

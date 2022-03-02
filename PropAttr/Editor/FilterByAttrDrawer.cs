@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Util.PropAttr.Editor
+namespace Unitilities.PropAttr.Editor
 {
     [CustomPropertyDrawer(typeof(FilterByAttribute))]
     public class FilterByAttrDrawer : PropertyDrawer
