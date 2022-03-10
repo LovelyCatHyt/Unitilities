@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 using UnityEngine;
 
 
@@ -13,6 +14,7 @@ namespace Unitilities
         /// <summary>
         /// 中心
         /// </summary>
+        [JsonIgnore]
         public Vector2 Center
         {
             get => _center;
@@ -21,6 +23,7 @@ namespace Unitilities
         /// <summary>
         /// 半长宽
         /// </summary>
+        [JsonIgnore]
         public Vector2 Extents
         {
             get => _extents;
@@ -29,6 +32,7 @@ namespace Unitilities
         /// <summary>
         /// 坐标最小点
         /// </summary>
+        [JsonIgnore]
         public Vector2 Min
         {
             get => _center - _extents;
@@ -41,6 +45,7 @@ namespace Unitilities
         /// <summary>
         /// 坐标最大点
         /// </summary>
+        [JsonIgnore]
         public Vector2 Max
         {
             get => _center + _extents;
@@ -53,14 +58,15 @@ namespace Unitilities
         /// <summary>
         /// 大小
         /// </summary>
+        [JsonIgnore]
         public Vector2 Size
         {
             get => _extents * 2f;
             set => Extents = value * .5f;
         }
 
-        [SerializeField] private Vector2 _center;
-        [SerializeField] private Vector2 _extents;
+        [JsonProperty("center")] [SerializeField] private Vector2 _center;
+        [JsonProperty("extents")] [SerializeField] private Vector2 _extents;
 
         public Bounds2D(Vector2 center, Vector2 size)
         {
@@ -75,8 +81,16 @@ namespace Unitilities
 
         public override bool Equals(object other)
         {
-            var b = (Bounds2D) other;
-            return _center.Equals(b._center) && _extents.Equals(b._extents);
+            if (other == null) return false;
+            try
+            {
+                var b = (Bounds2D)other;
+                return _center.Equals(b._center) && _extents.Equals(b._extents);
+            }
+            catch (InvalidCastException)
+            {
+                return false;
+            }
         }
 
         public override int GetHashCode()
@@ -149,6 +163,24 @@ namespace Unitilities
             var temp = this;
             temp.Extents -= amount;
             return temp;
+        }
+
+        public void DrawGizmos(Color c)
+        {
+            var lB = new Vector3(Min.x, Min.y, 0);
+            var rB = new Vector3(Max.x, Min.y, 0);
+            var rT = new Vector3(Max.x, Max.y, 0);
+            var lT = new Vector3(Min.x, Max.y, 0);
+            Gizmos.color = c;
+            Gizmos.DrawLine(lB, rB);
+            Gizmos.DrawLine(rB, rT);
+            Gizmos.DrawLine(rT, lT);
+            Gizmos.DrawLine(lT, lB);
+        }
+
+        public void DrawGizmos()
+        {
+            DrawGizmos(Color.cyan);
         }
 
         public static implicit operator Bounds2D(BoundsInt bInt)

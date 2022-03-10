@@ -59,15 +59,7 @@ namespace Unitilities.Camera
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            var lB = new Vector3(cameraBounds.Min.x, cameraBounds.Min.y, 0);
-            var rB = new Vector3(cameraBounds.Max.x, cameraBounds.Min.y, 0);
-            var rT = new Vector3(cameraBounds.Max.x, cameraBounds.Max.y, 0);
-            var lT = new Vector3(cameraBounds.Min.x, cameraBounds.Max.y, 0);
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(lB, rB);
-            Gizmos.DrawLine(rB, rT);
-            Gizmos.DrawLine(rT, lT);
-            Gizmos.DrawLine(lT, lB);
+            cameraBounds.DrawGizmos();
         }
 #endif
         private void Awake()
