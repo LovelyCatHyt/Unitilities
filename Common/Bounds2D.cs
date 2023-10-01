@@ -56,7 +56,7 @@ namespace Unitilities
             }
         }
         /// <summary>
-        /// 大小
+        /// 大小, 即完整长宽
         /// </summary>
         [JsonIgnore]
         public Vector2 Size

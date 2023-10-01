@@ -8,7 +8,7 @@ using Unitilities.DebugUtil;
 using UnityEditor;
 using UnityEngine;
 
-namespace Unitilities.Serialization.Editor
+namespace Unitilities.AssetManage.Editor
 {
     /// <summary>
     /// 对象引用表的编辑器

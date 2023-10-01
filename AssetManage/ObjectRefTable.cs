@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Unitilities.Serialization
+namespace Unitilities.AssetManage
 {
     /// <summary>
     /// 对象引用表
