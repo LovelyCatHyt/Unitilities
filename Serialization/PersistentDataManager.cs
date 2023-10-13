@@ -28,6 +28,35 @@ namespace Unitilities.Serialization
         string FileExtension { get; }
     }
 
+    public interface ISerializable
+    {
+        string FileExtension { get; }
+    }
+
+    public interface ITextSerializable : ISerializable
+    {
+        /// <summary>
+        /// 对象本身序列化为文本
+        /// </summary>
+        /// <returns></returns>
+        string Serialize();
+        /// <summary>
+        /// 从文本反序列化到对象本身
+        /// </summary>
+        /// <param name="data"></param>
+        void Deserialize(string data);
+    }
+
+    public interface IBinarySerializable : ISerializable
+    {
+        /// <summary>
+        /// 当前状态序列化后的字节长度, 包括长度描述数据本身
+        /// </summary>
+        long SerializeByteLength { get; }
+        void Serialize(BinaryWriter writer);
+        void Deserialize(BinaryReader reader);
+    }
+
     /// <summary>
     /// 文本序列化接口
     /// </summary>
@@ -42,6 +71,7 @@ namespace Unitilities.Serialization
     /// </summary>
     public interface IBinarySerializer : ISerializer
     {
+        bool IsTypeSupported<T>();
         void SerializeToBinary(object obj, BinaryWriter binaryWriter);
         T DeserializeFromBinary<T>(BinaryReader binaryReader);
     }
@@ -137,13 +167,29 @@ namespace Unitilities.Serialization
         /// <summary>
         /// 以文本形式保存一个对象
         /// </summary>
-        /// <param name="obj">待保存的对象</param>
+        /// <param name="obj">待保存的对象. 若对象为 <see cref="ITextSerializable"/>, 则使用对象自己的序列化方法.</param>
         /// <param name="scope">数据的生存周期</param>
         public static void SaveObjectAsText(object obj, string fileNameNoExtend, DataScope scope = DataScope.LocalShared)
         {
-            var file = fileNameNoExtend + '.' + TextSerializer.FileExtension;
-            var text = TextSerializer.SerializeToText(obj);
-            SaveText(text, file, scope);
+            var file = fileNameNoExtend;
+            if (obj is ITextSerializable serializable)
+            {
+                file += '.' + serializable.FileExtension;
+                SaveText(serializable.Serialize(), file, scope);
+            }
+            else
+            {
+                file += '.' + TextSerializer.FileExtension;
+                SaveText(TextSerializer.SerializeToText(obj), file, scope);
+            }
+        }
+
+        /// <summary>
+        /// 将自身保存到指定文本文件
+        /// </summary>
+        public static void SaveTo(this ITextSerializable obj, string fileNameNoExtend, DataScope scope = DataScope.LocalShared)
+        {
+            SaveText(obj.Serialize(), fileNameNoExtend + '.' + obj.FileExtension, scope);
         }
 
         /// <summary>
@@ -151,12 +197,36 @@ namespace Unitilities.Serialization
         /// </summary>
         public static T LoadObjectFromText<T>(string fileNameNoExtend, DataScope scope = DataScope.LocalShared) where T : new()
         {
-            var file = fileNameNoExtend + '.' + TextSerializer.FileExtension;
-            var path = GetFullFilePath(file, scope);
-            if (!File.Exists(path)) return new T();
+            if (typeof(ITextSerializable).IsAssignableFrom(typeof(T)))
+            {
+                var temp = (ITextSerializable)new T();
+                var file = fileNameNoExtend + '.' + temp.FileExtension;
+                var path = GetFullFilePath(file, scope);
+                if (!File.Exists(path)) return (T)temp;
 
-            var text = File.ReadAllText(path);
-            return TextSerializer.DeserializeFromText<T>(text);
+                var text = File.ReadAllText(path);
+                temp.Deserialize(text);
+                return (T)temp;
+            }
+            else
+            {
+                var file = fileNameNoExtend + '.' + TextSerializer.FileExtension;
+                var path = GetFullFilePath(file, scope);
+                if (!File.Exists(path)) return new T();
+
+                var text = File.ReadAllText(path);
+                return TextSerializer.DeserializeFromText<T>(text);
+            }
+
+        }
+
+        /// <summary>
+        /// 从指定文本文件载入并覆盖自身的数据
+        /// </summary>
+        public static void LoadFrom(this ITextSerializable obj, string fileNameNoExtend, DataScope scope = DataScope.LocalShared)
+        {
+            string path = GetFullFilePath(fileNameNoExtend + '.' + obj.FileExtension, scope);
+            obj.Deserialize(File.ReadAllText(path));
         }
 
         /// <summary>
@@ -169,22 +239,54 @@ namespace Unitilities.Serialization
         }
 
         /// <summary>
-        /// 以二进制形式保存一个对象. <see cref="BinarySerializer"/> 为空时, 使用 <see cref="TextSerializer"/> 以文本保存.
+        /// 以二进制形式保存一个对象
+        /// <para><see cref="BinarySerializer"/> 为空时, 使用 <see cref="TextSerializer"/> 以文本保存</para>
+        /// <param name="obj">若 obj 为 <see cref="IBinarySerializable"/>, 则使用对象自身的序列化方法</param>
         /// </summary>
         public static void SaveObjectAsBinary(object obj, string fileNameNoExtend, DataScope scope = DataScope.LocalShared)
         {
-            if (BinarySerializer == null)
+            if (obj is IBinarySerializable serializable)
+            {
+                var file = fileNameNoExtend + '.' + serializable.FileExtension;
+                var path = GetFullFilePath(file, scope);
+                using (var fileStream = File.OpenWrite(path))
+                {
+                    using (BinaryWriter writer = new BinaryWriter(fileStream))
+                    {
+                        serializable.Serialize(writer);
+                    }
+                }
+
+            }
+            else if (BinarySerializer == null)
             {
                 SaveObjectAsText(obj, fileNameNoExtend, scope);
             }
-
-            var file = fileNameNoExtend + '.' + BinarySerializer.FileExtension;
-            var path = GetFullFilePath(file, scope);
-            using (var fileStream = File.OpenWrite(path))
+            else
             {
-                using (BinaryWriter writer = new BinaryWriter(fileStream))
+                var file = fileNameNoExtend + '.' + BinarySerializer.FileExtension;
+                var path = GetFullFilePath(file, scope);
+                using (var fileStream = File.OpenWrite(path))
                 {
-                    BinarySerializer.SerializeToBinary(obj, writer);
+                    using (BinaryWriter writer = new BinaryWriter(fileStream))
+                    {
+                        BinarySerializer.SerializeToBinary(obj, writer);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将自身保存到指定二进制文件
+        /// </summary>
+        public static void SaveTo(this IBinarySerializable obj, string fileNameNoExtend, DataScope scope = DataScope.LocalShared)
+        {
+            var path = GetFullFilePath(fileNameNoExtend + '.' + obj.FileExtension, scope);
+            using (var file = File.OpenWrite(path))
+            {
+                using (var writer = new BinaryWriter(file))
+                {
+                    obj.Serialize(writer);
                 }
             }
         }
@@ -198,21 +300,56 @@ namespace Unitilities.Serialization
         /// <returns></returns>
         public static T LoadObjectFromBinary<T>(string fileNameNoExtend, DataScope scope = DataScope.LocalShared) where T : new()
         {
-            var file = fileNameNoExtend + '.' + TextSerializer.FileExtension;
-            var path = GetFullFilePath(file, scope);
-            if (!File.Exists(path)) return new T();
-
-            var res = new T();
-            using (var fileStream = File.OpenRead(path))
+            if (typeof(IBinarySerializable).IsAssignableFrom(typeof(T)))
             {
-                using (var reader = new BinaryReader(fileStream))
+                var res = (IBinarySerializable)new T();
+                var file = fileNameNoExtend + '.' + res.FileExtension;
+                var path = GetFullFilePath(file, scope);
+                if (!File.Exists(path)) return (T)res;
+
+                using (var fileStream = File.OpenRead(path))
                 {
-                    BinarySerializer.DeserializeFromBinary<T>(reader);
+                    using (var reader = new BinaryReader(fileStream))
+                    {
+                        res.Deserialize(reader);
+                    }
                 }
+                return (T)res;
             }
-            return res;
+            else
+            {
+                var file = fileNameNoExtend + '.' + TextSerializer.FileExtension;
+                var path = GetFullFilePath(file, scope);
+                if (!File.Exists(path)) return new T();
+
+                var res = new T();
+                using (var fileStream = File.OpenRead(path))
+                {
+                    using (var reader = new BinaryReader(fileStream))
+                    {
+                        BinarySerializer.DeserializeFromBinary<T>(reader);
+                    }
+                }
+                return res;
+            }
         }
 
+        /// <summary>
+        /// 从指定二进制文件读取并覆盖自身数据
+        /// </summary>
+        public static void LoadFrom(this IBinarySerializable obj, string fileNameNoExtend, DataScope scope = DataScope.LocalShared)
+        {
+            var path = GetFullFilePath(fileNameNoExtend + '.' + obj.FileExtension, scope);
+            using (var file = File.OpenRead(path))
+            {
+                using (var reader = new BinaryReader(file))
+                {
+                    obj.Deserialize(reader);
+                }
+            }
+        }
+
+        #region Menu Action
         [MenuItem("Unitilities/Persistent Data/Clear/All Data")]
         public static void ClearAllData()
         {
@@ -233,5 +370,7 @@ namespace Unitilities.Serialization
             Directory.Delete(CurrentServerDir);
             Directory.CreateDirectory(CurrentServerDir);
         }
+        #endregion
+
     }
 }
