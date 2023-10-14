@@ -1,6 +1,7 @@
 using System.IO;
 using UnityEngine;
 using UnityEditor;
+using System.Diagnostics;
 
 namespace Unitilities.Serialization
 {
@@ -113,11 +114,28 @@ namespace Unitilities.Serialization
 
         static PersistentDataManager()
         {
+            SetDefaultRootDirectory();
+        }
+
+        /// <summary>
+        /// 设置默认的根目录
+        /// </summary>
+        public static void SetDefaultRootDirectory()
+        {
 #if UNITY_EDITOR
-            RootDirectory = Path.GetFullPath("../PersistentData/", Application.dataPath);
+            SetRootDirectory(Path.GetFullPath("../PersistentData/", Application.dataPath));
 #else
-            DataRootDirectory = Path.GetFullPath("PersistentData/", Application.dataPath);
+            SetRootDirectory(Path.GetFullPath("PersistentData/", Application.dataPath));
 #endif
+        }
+
+        /// <summary>
+        /// 设置并创建持久化数据根目录
+        /// <para>不会影响设置前可能存在的有效根目录</para>
+        /// </summary>
+        public static void SetRootDirectory(string rootDir)
+        {
+            RootDirectory = Path.GetFullPath(rootDir);
 
             SaveRootDirectory = Path.GetFullPath("Saves/", RootDirectory);
 
@@ -161,7 +179,7 @@ namespace Unitilities.Serialization
         {
             var path = GetFullFilePath(fileFullName, scope);
             File.WriteAllText(path, content);
-            Debug.Log($"Text file \"{path}\" should have been saved.");
+            // Debug.Log($"Text file \"{path}\" should have been saved.");
         }
 
         /// <summary>
@@ -316,12 +334,16 @@ namespace Unitilities.Serialization
                 }
                 return (T)res;
             }
+            else if (BinarySerializer == null)
+            {
+                return LoadObjectFromText<T>(fileNameNoExtend, scope);
+            }
             else
             {
-                var file = fileNameNoExtend + '.' + TextSerializer.FileExtension;
+                var file = fileNameNoExtend + '.' + BinarySerializer.FileExtension;
                 var path = GetFullFilePath(file, scope);
                 if (!File.Exists(path)) return new T();
-
+                
                 var res = new T();
                 using (var fileStream = File.OpenRead(path))
                 {
@@ -369,6 +391,12 @@ namespace Unitilities.Serialization
         {
             Directory.Delete(CurrentServerDir);
             Directory.CreateDirectory(CurrentServerDir);
+        }
+
+        [MenuItem("Unitilities/Persistent Data/Open In Explorer")]
+        public static void OpenInExplorer()
+        {
+            Process.Start("explorer.exe", RootDirectory);
         }
         #endregion
 
