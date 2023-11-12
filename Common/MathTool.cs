@@ -60,5 +60,21 @@ namespace Unitilities
         {
             min = Vector3.Min(a, b); max = Vector3.Max(a, b);
         }
+
+        /// <summary>
+        /// 取非负余数, 即取模.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static int Modular(int a, int b) => (a % b + b) % b;
+
+        /// <summary>
+        /// 向下取整的整数除法
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static int FloorDiv(int a, int b) => (a - Modular(a, b)) / b;
     }
 }
