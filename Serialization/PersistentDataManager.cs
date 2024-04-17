@@ -343,7 +343,7 @@ namespace Unitilities.Serialization
         [MenuItem("Unitilities/Persistent Data/Open In Explorer")]
         public static void OpenInExplorer()
         {
-            Process.Start("explorer.exe", RootDirectory);
+            Process.Start(RootDirectory);
         }
         #endregion
 
