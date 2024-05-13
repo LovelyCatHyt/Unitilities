@@ -329,14 +329,14 @@ namespace Unitilities.Serialization
         [MenuItem("Unitilities/Persistent Data/Clear/Current Save")]
         public static void ClearCurrentSave()
         {
-            Directory.Delete(CurrentSaveDir);
+            Directory.Delete(CurrentSaveDir, true);
             Directory.CreateDirectory(CurrentSaveDir);
         }
 
         [MenuItem("Unitilities/Persistent Data/Clear/Current Server")]
         public static void ClearCurrentServer()
         {
-            Directory.Delete(CurrentServerDir);
+            Directory.Delete(CurrentServerDir, true);
             Directory.CreateDirectory(CurrentServerDir);
         }
 
