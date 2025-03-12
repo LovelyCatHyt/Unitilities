@@ -247,6 +247,10 @@ namespace Unitilities.Serialization
         public static void SaveTo(this IBinarySerializable obj, string fileNameNoExtend, DataScope scope = DataScope.LocalShared)
         {
             var path = GetFullFilePath(fileNameNoExtend + '.' + obj.FileExtension, scope);
+            
+            // 没文件会在下面的 Open 阶段报错
+            if(!File.Exists(path)) File.Create(path).Close();
+
             using (var file = File.Open(path, FileMode.Truncate))
             {
                 using (var writer = new BinaryWriter(file))
